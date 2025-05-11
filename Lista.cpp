@@ -60,7 +60,7 @@ bool Lista::buscar(int valor) {
 
 void Lista::mostrar() {
     if (estaVacia()) {
-        cout << "La lista esta vacia\n";
+        cout << "La lista esta vacia\n\n";
         return;
     }
 
@@ -69,10 +69,10 @@ void Lista::mostrar() {
         cout << actual->dato << " ";
         actual = actual->siguiente;
     }
-    cout << "\n";
+    cout << "\n\n";
 }
 
-// Implementación de funciones auxiliares
+// Funciones del menú de listas
 InputResult leerEntrada(const string& mensaje) {
     string entrada;
     while (true) {
@@ -89,31 +89,31 @@ InputResult leerEntrada(const string& mensaje) {
             if (pos == entrada.size()) return {valor, false};
             throw invalid_argument("");
         } catch (...) {
-            cout << "\nElemento invalido, intenta nuevamente.\n\n";
+            cout << "\nEntrada invalida! Intenta nuevamente\n\n";
             system("pause");
             system("cls");
         }
     }
 }
 
-void mostrarMenu() {
-    cout << "MENU PRINCIPAL\n"
+void mostrarMenuLista() {
+    system("cls");
+    cout << "SUBMENU - LISTA ENLAZADA\n\n"
          << "1. Insertar elemento\n"
          << "2. Eliminar elemento\n"
          << "3. Buscar elemento\n"
          << "4. Mostrar lista\n"
-         << "5. Salir\n"
-         << "Selecciona una opcion: ";
+         << "5. Volver al menu principal\n\n"
+         << "Seleccione operacion: ";
 }
-/*
-// Función principal
-int main() {
+
+void manejarMenuLista() {
     Lista lista;
     string entrada;
     int opcion;
 
-    while (true) {
-        mostrarMenu();
+    do {
+        mostrarMenuLista();
         getline(cin, entrada);
 
         try {
@@ -122,73 +122,64 @@ int main() {
             opcion = -1;
         }
 
-        switch (opcion) {
+        system("cls");
+        
+        switch(opcion) {
             case 1: {
-                system("cls");
-                InputResult res = leerEntrada("Ingresa el valor a insertar (C para cancelar): ");
+                InputResult res = leerEntrada("Ingrese valor a insertar (C para cancelar): ");
                 if (!res.cancelado) {
                     lista.insertar(res.valor);
-                    cout << "\nElemento " << res.valor << " insertado!\n";
+                    cout << "\nElemento " << res.valor << " insertado exitosamente!\n\n";
                 }
                 break;
             }
-
+            
             case 2: {
-                system("cls");
                 if (lista.estaVacia()) {
                     cout << "La lista esta vacia!\n\n";
                 } else {
-                    InputResult res = leerEntrada("Ingresa el valor a eliminar (C para cancelar): ");
+                    InputResult res = leerEntrada("Ingrese valor a eliminar (C para cancelar): ");
                     if (!res.cancelado) {
                         if (lista.buscar(res.valor)) {
                             lista.eliminar(res.valor);
-                            cout << "\nElemento " << res.valor << " eliminado!\n";
+                            cout << "\nElemento " << res.valor << " eliminado!\n\n";
                         } else {
-                            cout << "\nElemento no encontrado!\n";
+                            cout << "\nEl valor no existe en la lista\n\n";
                         }
                     }
                 }
                 break;
             }
-
+            
             case 3: {
-                system("cls");
                 if (lista.estaVacia()) {
                     cout << "La lista esta vacia!\n\n";
                 } else {
-                    InputResult res = leerEntrada("Ingresa el valor a buscar (C para cancelar): ");
+                    InputResult res = leerEntrada("Ingrese valor a buscar (C para cancelar): ");
                     if (!res.cancelado) {
-                        if (lista.buscar(res.valor)) {
-                            cout << "\nElemento " << res.valor << " encontrado!\n";
-                        } else {
-                            cout << "\nElemento no encontrado\n";
-                        }
+                        string resultado = lista.buscar(res.valor) ? "SI" : "NO";
+                        cout << "\nEl elemento " << res.valor << " " << resultado << " esta en la lista\n\n";
                     }
                 }
                 break;
             }
-
+            
             case 4: {
-                system("cls");
-                if (!lista.estaVacia()) {
-                    cout << "Elementos en la lista:\n\n";
-                }
                 lista.mostrar();
-                cout << "\n";
                 break;
             }
-
+            
             case 5:
-                return 0;
-
-            default:
-                cout << "\nOpcion invalida!\n";
+                cout << "Volviendo al menu principal...\n\n";
                 break;
+            
+            default:
+                cout << "Opcion no valida!\n\n";
         }
 
-        system("pause");
-        system("cls");
-    }
-
-    return 0;
-    */
+        if(opcion != 5) {
+            system("pause");
+        }
+        
+    } while(opcion != 5);
+}

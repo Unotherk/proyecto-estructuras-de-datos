@@ -28,7 +28,8 @@ struct InputResult {
     bool cancelado;
 };
 
+// Funciones del menú de listas
+void manejarMenuLista();
 InputResult leerEntrada(const std::string& mensaje);
-void mostrarMenu();
 
 #endif
