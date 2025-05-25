@@ -1,4 +1,5 @@
 #include "lista.h"
+#include "pila.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -59,6 +60,8 @@ void manejarMenuPrincipal() {
                 
             case 2:
             case 3:
+                menuPila();
+                break;
             case 4:
             case 5:
             case 6:
