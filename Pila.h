@@ -6,7 +6,6 @@ struct NodoPila {
     NodoPila* siguiente;
 };
 
-// Funciones de la pila
 void ingresarDatoPila();
 void mostrarPila();
 void eliminarDatoPila();

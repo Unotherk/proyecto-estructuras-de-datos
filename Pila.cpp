@@ -69,7 +69,7 @@ void menuPila() {
              << "5. Volver al menu principal\n"
              << "Seleccione una opcion: ";
         cin >> opcion;
-        cin.ignore(); // Limpia el buffer del salto de línea
+        cin.ignore();
 
         switch (opcion) {
             case 1: ingresarDatoPila(); break;
