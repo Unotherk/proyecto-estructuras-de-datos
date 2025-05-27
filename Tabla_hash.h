@@ -14,7 +14,7 @@ private:
     static const int TAMANO_TABLA = 10;
     vector<list<int>> tabla;
 
-    // Función hash simple
+    // FunciÃ³n hash simple
     int funcionHash(int clave);
 
     // Funciones auxiliares para validacion
