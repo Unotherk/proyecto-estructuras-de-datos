@@ -1,285 +1,359 @@
 #include "Tabla_hash.h"
-#include <cmath>
-#include <limits>
+#include <string>
+#include <sstream>
 #include <algorithm>
+#include <cstdlib>  // Para system()
 
 using namespace std;
 
-// Funcion de hash
-int HashTable::hashFunction(int key) {
-    return key % tableSize;
+// Constructor
+TablaHash::TablaHash() : tabla(TAMANO_TABLA) {}
+
+// Función para limpiar pantalla
+void TablaHash::limpiarPantalla() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
 }
 
-// Funcion para comprobar si es numero
-bool HashTable::isPrime(int n) {
-    if (n <= 1) return false;
-    if (n <= 3) return true;
-    if (n % 2 == 0 || n % 3 == 0) return false;
+// Función hash simple (módulo)
+int TablaHash::funcionHash(int clave) {
+    return abs(clave) % TAMANO_TABLA;
+}
 
-    for (int i = 5; i * i <= n; i += 6) {
-        if (n % i == 0 || n % (i + 2) == 0)
-            return false;
+// Validar si una cadena es un numero valido
+bool TablaHash::esNumeroValido(const string& str) {
+    if (str.empty()) return false;
+
+    size_t inicio = 0;
+    if (str[0] == '-' || str[0] == '+') {
+        if (str.length() == 1) return false;
+        inicio = 1;
+    }
+
+    for (size_t i = inicio; i < str.length(); i++) {
+        if (!isdigit(str[i])) return false;
     }
     return true;
 }
 
-// Funcion para encontrar el siguiente numero 
-int HashTable::nextPrime(int n) {
-    if (n <= 1) return 2;
+// Obtener un entero valido del usuario
+int TablaHash::obtenerEnteroValido(const string& mensaje) {
+    string entrada;
+    int numero;
 
-    bool found = false;
-    while (!found) {
-        n++;
-        if (isPrime(n))
-            found = true;
-    }
-    return n;
-}
+    while (true) {
+        cout << mensaje;
+        getline(cin, entrada);
 
-// Redimensionar la tabla hash
-void HashTable::resize() {
-    int oldSize = tableSize;
-    tableSize = nextPrime(tableSize * 2);
-    vector<list<KeyValuePair>> oldTable = table;
-
-    // Crear nueva tabla
-    table.clear();
-    table.resize(tableSize);
-    itemCount = 0;
-
-    // Reinsertar todos los elementos
-    for (int i = 0; i < oldSize; i++) {
-        for (auto& pair : oldTable[i]) {
-            insert(pair.key, pair.value);
+        if (esNumeroValido(entrada)) {
+            stringstream ss(entrada);
+            ss >> numero;
+            return numero;
+        }
+        else {
+            cout << "Error: Debe ingresar un numero valido. Intente nuevamente.\n";
         }
     }
 }
 
-// Constructor
-HashTable::HashTable(int size) {
-    tableSize = size;
-    table.resize(tableSize);
-    itemCount = 0;
+// Obtener una opcion valida del menu
+char TablaHash::obtenerOpcionValida(const string& opciones) {
+    string entrada;
+    char opcion;
+
+    while (true) {
+        cout << "Ingrese su opcion: ";
+        getline(cin, entrada);
+
+        if (entrada.length() == 1) {
+            opcion = tolower(entrada[0]);
+            if (opciones.find(opcion) != string::npos) {
+                return opcion;
+            }
+        }
+
+        cout << "Error: Opcion no valida. Por favor, ingrese una de las opciones mostradas.\n";
+    }
+}
+
+// Limpiar buffer de entrada
+void TablaHash::limpiarBuffer() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+// Pausar para que el usuario pueda leer
+void TablaHash::pausar() {
+    cout << "\nPresione Enter para continuar...";
+    cin.get();
 }
 
 // Insertar un elemento en la tabla hash
-void HashTable::insert(int key, string value) {
-    // Verificar factor de carga y redimensionar si es necesario
-    float loadFactor = static_cast<float>(itemCount) / tableSize;
-    if (loadFactor > 0.7) {
-        resize();
-    }
+void TablaHash::insertar(int clave) {
+    int indice = funcionHash(clave);
 
-    int index = hashFunction(key);
-
-    // Comprobar si la clave ya existe
-    for (auto& pair : table[index]) {
-        if (pair.key == key) {
-            pair.value = value; // Actualizar valor
+    // Verificar si ya existe
+    for (const int& elemento : tabla[indice]) {
+        if (elemento == clave) {
+            cout << "El numero " << clave << " ya existe en la tabla.\n";
             return;
         }
     }
 
-    // Si no existe, insertar nuevo par clave-valor
-    table[index].push_back(KeyValuePair(key, value));
-    itemCount++;
+    tabla[indice].push_back(clave);
+    cout << "Numero " << clave << " insertado exitosamente.\n";
 }
 
-// Buscar un elemento por clave
-string HashTable::search(int key) {
-    int index = hashFunction(key);
+// Eliminar un elemento de la tabla hash
+bool TablaHash::eliminar(int clave) {
+    int indice = funcionHash(clave);
 
-    for (auto& pair : table[index]) {
-        if (pair.key == key) {
-            return pair.value;
-        }
+    auto& lista = tabla[indice];
+    auto it = find(lista.begin(), lista.end(), clave);
+
+    if (it != lista.end()) {
+        lista.erase(it);
+        cout << "Numero " << clave << " eliminado exitosamente.\n";
+        return true;
     }
-
-    return ""; // Retornar cadena vacia si no se encuentra
+    else {
+        cout << "El numero " << clave << " no se encontro en la tabla.\n";
+        return false;
+    }
 }
 
-// Eliminar un elemento por clave
-bool HashTable::remove(int key) {
-    int index = hashFunction(key);
+// Buscar un elemento en la tabla hash
+bool TablaHash::buscar(int clave) {
+    int indice = funcionHash(clave);
 
-    auto& bucket = table[index];
-    for (auto it = bucket.begin(); it != bucket.end(); ++it) {
-        if (it->key == key) {
-            bucket.erase(it);
-            itemCount--;
+    for (const int& elemento : tabla[indice]) {
+        if (elemento == clave) {
+            cout << "El numero " << clave << " SI se encuentra en la tabla (Indice: " << indice << ").\n";
             return true;
         }
     }
 
-    return false; // Elemento no encontrado
+    cout << "El numero " << clave << " NO se encuentra en la tabla.\n";
+    return false;
 }
 
-// Mostrar todos los elementos de la tabla hash
-void HashTable::display() {
-    if (itemCount == 0) {
-        cout << "La tabla hash esta vacia." << endl;
-        return;
-    }
+// Visualizar toda la tabla hash
+void TablaHash::visualizar() {
+    cout << "\nCONTENIDO DE LA TABLA HASH \n";
+    cout << "================================\n";
+    bool tablaVacia = true;
 
-    cout << "Contenido de la tabla hash:" << endl;
-    cout << "-------------------------" << endl;
-    for (int i = 0; i < tableSize; i++) {
-        if (!table[i].empty()) {
-            cout << "Índice " << i << ": ";
-            for (auto& pair : table[i]) {
-                cout << "[" << pair.key << ":" << pair.value << "] ";
-            }
-            cout << endl;
+    for (int i = 0; i < TAMANO_TABLA; i++) {
+        cout << "Indice " << i << ": ";
+        if (tabla[i].empty()) {
+            cout << "[vacio]";
         }
-    }
-    cout << "-------------------------" << endl;
-    cout << "Total de elementos: " << itemCount << endl;
-    cout << "Tamaño de la tabla: " << tableSize << endl;
-    cout << "Factor de carga: " << static_cast<float>(itemCount) / tableSize << endl;
-}
-
-// Obtener el tamaño de la tabla
-int HashTable::size() {
-    return itemCount;
-}
-
-// Verificar si la tabla esta vacia
-bool HashTable::isEmpty() {
-    return itemCount == 0;
-}
-
-// Limpiar la tabla hash
-void HashTable::clear() {
-    for (auto& bucket : table) {
-        bucket.clear();
-    }
-    itemCount = 0;
-}
-
-// Funcion para mostrar el menu de la Tabla Hash
-void showHashTableMenu() {
-    HashTable hashTable;
-    int option = 0;
-    bool exit = false;
-
-    while (!exit) {
-        cout << "\n=== MENU TABLA HASH ===" << endl;
-        cout << "1. Insertar elemento" << endl;
-        cout << "2. Buscar elemento" << endl;
-        cout << "3. Eliminar elemento" << endl;
-        cout << "4. Mostrar tabla" << endl;
-        cout << "5. Limpiar tabla" << endl;
-        cout << "6. Volver al menu principal" << endl;
-        cout << "Seleccione una opcion: ";
-
-        // Validar entrada
-        if (!(cin >> option)) {
-            cin.clear(); // Limpiar el estado de error
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Descartar entrada invalida
-            cout << "\nEntrada invalida. Por favor ingrese un numero." << endl;
-            continue;
-        }
-
-        // Limpiar buffer de entrada
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        switch (option) {
-        case 1: { // Insertar elemento
-            int key;
-            string value;
-
-            cout << "\n--- Insertar Elemento ---" << endl;
-            cout << "Ingrese la clave (numero): ";
-
-            // Validar entrada de clave
-            if (!(cin >> key)) {
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cout << "Entrada invalida. La clave debe ser un numero." << endl;
-                break;
+        else {
+            tablaVacia = false;
+            cout << "[ ";
+            for (auto it = tabla[i].begin(); it != tabla[i].end(); ++it) {
+                if (it != tabla[i].begin()) std::cout << " -> ";
+                cout << *it;
             }
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << " ]";
+        }
+        cout << "\n";
+    }
 
-            cout << "Ingrese el valor: ";
-            getline(cin, value);
+    if (tablaVacia) {
+        cout << "\nLa tabla hash esta completamente vacia.\n";
+    }
+    cout << "================================\n";
+}
 
-            hashTable.insert(key, value);
-            cout << "Elemento insertado correctamente." << endl;
+// Mostrar menu principal
+void TablaHash::mostrarMenuPrincipal() {
+    limpiarPantalla();
+    cout << "================================\n";
+    cout << "        MENU TABLA HASH         \n";
+    cout << "================================\n";
+    cout << " 1. Agregar numero              \n";
+    cout << " 2. Borrar numero               \n";
+    cout << " 3. Encontrar numero            \n";
+    cout << " 4. Mostrar tabla completa      \n";
+    cout << " 5. Salir                       \n";
+    cout << " 6. Regresar al menu principal  \n";
+    cout << "================================\n";
+}
+
+// Menu para agregar
+void TablaHash::menuAgregar() {
+    char opcion;
+
+    do {
+        limpiarPantalla();
+        cout << "================================\n";
+        cout << "        AGREGAR NUMEROS         \n";
+        cout << "================================\n";
+
+        int numero = obtenerEnteroValido("Ingrese el numero a agregar: ");
+        insertar(numero);
+
+        cout << "\nDesea agregar otro numero? (s/n) o regresar al menu principal (r): ";
+        opcion = obtenerOpcionValida("snr");
+
+    } while (opcion == 's');
+
+    if (opcion == 'r') {
+        cout << "Regresando al menu principal...\n";
+        pausar();
+    }
+}
+
+// Menu para borrar
+void TablaHash::menuBorrar() {
+    char opcion;
+
+    do {
+        limpiarPantalla();
+        cout << "================================\n";
+        cout << "        BORRAR NUMEROS          \n";
+        cout << "================================\n";
+
+        int numero = obtenerEnteroValido("Ingrese el numero a borrar: ");
+        eliminar(numero);
+
+        cout << "\nDesea borrar otro numero (s/n) o regresar al menu principal (r): ";
+        opcion = obtenerOpcionValida("snr");
+
+    } while (opcion == 's');
+
+    if (opcion == 'r') {
+        cout << "Regresando al menu principal...\n";
+        pausar();
+    }
+}
+
+// Menu para encontrar
+void TablaHash::menuEncontrar() {
+    char opcion;
+
+    do {
+        limpiarPantalla();
+        cout << "================================\n";
+        cout << "       ENCONTRAR NUMEROS        \n";
+        cout << "================================\n";
+
+        int numero = obtenerEnteroValido("Ingrese el numero a encontrar: ");
+        buscar(numero);
+
+        cout << "\nDesea encontrar otro numero (s/n) o regresar al menu principal (r): ";
+        opcion = obtenerOpcionValida("snr");
+
+    } while (opcion == 's');
+
+    if (opcion == 'r') {
+        cout << "Regresando al menu principal...\n";
+        pausar();
+    }
+}
+
+// Menu para mostrar
+void TablaHash::menuMostrar() {
+    char opcion;
+
+    do {
+        limpiarPantalla();
+        visualizar();
+
+        cout << "\nDesea ver la tabla nuevamente? (s/n) o regresar al menu principal (r): ";
+        opcion = obtenerOpcionValida("snr");
+
+    } while (opcion == 's');
+
+    if (opcion == 'r') {
+        cout << "Regresando al menu principal...\n";
+        pausar();
+    }
+}
+
+// Confirmar salida del programa
+bool TablaHash::confirmarSalida() {
+    limpiarPantalla();
+    cout << "================================\n";
+    cout << "       CONFIRMAR SALIDA         \n";
+    cout << "================================\n";
+    cout << "Todos los datos almacenados se perderan.\n";
+    cout << "Esta seguro de que desea salir del programa (s/n): ";
+    char opcion = obtenerOpcionValida("sn");
+    return (opcion == 's');
+}
+
+// Mostrar el menu principal del sistema de estructuras de datos
+void TablaHash::mostrarMenuSistema() {
+    limpiarPantalla();
+    cout << "SISTEMA DE ESTRUCTURAS DE DATOS\n"
+        << "1. Trabajar con Lista Enlazada\n"
+        << "2. Trabajar con Cola\n"
+        << "3. Trabajar con Pila\n"
+        << "4. Trabajar con Arbol Binario\n"
+        << "5. Trabajar con Arbol AVL\n"
+        << "6. Trabajar con Arbol B\n"
+        << "7. Trabajar con Tabla Hash\n"
+        << "8. Salir del sistema\n\n"
+        << "Seleccione una opcion: ";
+}
+
+// Función principal para ejecutar el programa
+void TablaHash::ejecutar() {
+    char opcion;
+
+    // Mostrar mensaje de bienvenida
+    limpiarPantalla();
+
+    do {
+        mostrarMenuPrincipal();
+        opcion = obtenerOpcionValida("123456");
+
+        switch (opcion) {
+        case '1':
+            menuAgregar();
             break;
-        }
-        case 2: { // Buscar elemento
-            int key;
-
-            cout << "\n--- Buscar Elemento ---" << endl;
-            cout << "Ingrese la clave a buscar: ";
-
-            // Validar entrada de clave
-            if (!(cin >> key)) {
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cout << "Entrada invalida. La clave debe ser un numero." << endl;
-                break;
-            }
-
-            string result = hashTable.search(key);
-            if (result.empty()) {
-                cout << "Elemento con clave " << key << " no encontrado." << endl;
+        case '2':
+            menuBorrar();
+            break;
+        case '3':
+            menuEncontrar();
+            break;
+        case '4':
+            menuMostrar();
+            break;
+        case '5':
+            if (confirmarSalida()) {
+                limpiarPantalla();
+                cout << "================================\n";
+                cout << "Gracias por usar el Sistema   \n";
+                cout << "       de Tabla Hash          \n";
+                cout << "================================\n";
+                return;
             }
             else {
-                cout << "Valor encontrado: " << result << endl;
+                cout << "Operacion cancelada. Regresando al menu principal...\n";
+                pausar();
             }
+            break;
+        case '6':
+            cout << "Regresando al menu del sistema de estructuras de datos...\n";
+            pausar();
+            mostrarMenuSistema();
+            cout << "Presione Enter para volver al menu de Tabla Hash...";
+            cin.get();
             break;
         }
-        case 3: { // Eliminar elemento
-            int key;
+    } while (true);
+}
 
-            cout << "\n--- Eliminar Elemento ---" << endl;
-            cout << "Ingrese la clave a eliminar: ";
-
-            // Validar entrada de clave
-            if (!(cin >> key)) {
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cout << "Entrada invalida. La clave debe ser un numero entero." << endl;
-                break;
-            }
-
-            if (hashTable.remove(key)) {
-                cout << "Elemento con clave " << key << " eliminado correctamente." << endl;
-            }
-            else {
-                cout << "Elemento con clave " << key << " no encontrado." << endl;
-            }
-            break;
-        }
-        case 4: // Mostrar tabla
-            cout << "\n--- Mostrar Tabla Hash ---" << endl;
-            hashTable.display();
-            break;
-        case 5: // Limpiar tabla
-            cout << "\n--- Limpiar Tabla Hash ---" << endl;
-            cout << "¿Esta seguro que desea limpiar la tabla? (s/n): ";
-            char confirm;
-            cin >> confirm;
-
-            if (tolower(confirm) == 's') {
-                hashTable.clear();
-                cout << "Tabla hash limpiada correctamente." << endl;
-            }
-            break;
-        case 6: { // Volver al menú principal
-            cout << "\n¿Esta seguro que desea volver al menu principal? Todos los cambios se perderan. (s/n): ";
-            char confirm;
-            cin >> confirm;
-
-            if (tolower(confirm) == 's') {
-                exit = true;
-                cout << "Volviendo al menu principal..." << endl;
-            }
-            break;
-        }
-        default:
-            cout << "\nOpcion invalida. Por favor seleccione una opcion valida." << endl;
-        }
-    }
+// Función main
+int main() {
+    TablaHash tabla;
+    tabla.ejecutar();
+    return 0;
 }

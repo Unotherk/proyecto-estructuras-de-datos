@@ -1,54 +1,55 @@
-#ifndef HASH_TABLE_H
-#ifndef HASH_TABLE_H
+#ifndef TABLA_HASH_H
+#define TABLA_HASH_H
 
 #include <iostream>
-#include <string>
 #include <vector>
 #include <list>
+#include <limits>
+#include <string>
 
 using namespace std;
 
-class Hastable {
+class TablaHash {
 private:
+    static const int TAMANO_TABLA = 10;
+    vector<list<int>> tabla;
 
-	struct KeyValuePair {
-		int key;
-		string value;
-		KeyValuePair(int k, string v) : key(k), value(v) {}
+    // Función hash simple
+    int funcionHash(int clave);
 
-	};
+    // Funciones auxiliares para validacion
+    bool esNumeroValido(const std::string& str);
+    int obtenerEnteroValido(const std::string& mensaje);
+    char obtenerOpcionValida(const std::string& opciones);
 
-	vector<list<KeyValuePair>> table;
-	int tableSize;
-	int itemCount;
+    // Funciones para limpiar entrada
+    void limpiarBuffer();
 
-	int hashFuntion(int key);
+    // Nuevas funciones agregadas
+    void limpiarPantalla();
+    void pausar();
 
-	bool isPrime(int n);
+public:
+    // Constructor
+    TablaHash();
 
-	int nextPrime(int n);
+    // Operaciones principales
+    void insertar(int clave);
+    bool eliminar(int clave);
+    bool buscar(int clave);
+    void visualizar();
 
-	void resize();
+    // Funciones del menu
+    void mostrarMenuPrincipal();
+    void mostrarMenuSistema();
+    void menuAgregar();
+    void menuBorrar();
+    void menuEncontrar();
+    void menuMostrar();
+    void ejecutar();
 
-	public
-		Hashtable(int size = 17);
-	
-	void insert(int Key, string value);
-
-	string search(int key);
-
-	bool remove(int key);
-
-	void display();
-
-	int size();
-
-	bool isEmpty();
-
-	void clear();
-
+    // Funcion para confirmar salida
+    bool confirmarSalida();
 };
-
-void showHashTableMenu();
 
 #endif
