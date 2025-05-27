@@ -18,9 +18,9 @@ private:
     int funcionHash(int clave);
 
     // Funciones auxiliares para validacion
-    bool esNumeroValido(const std::string& str);
-    int obtenerEnteroValido(const std::string& mensaje);
-    char obtenerOpcionValida(const std::string& opciones);
+    bool esNumeroValido(const string& str);
+    int obtenerEnteroValido(const string& mensaje);
+    char obtenerOpcionValida(const string& opciones);
 
     // Funciones para limpiar entrada
     void limpiarBuffer();
