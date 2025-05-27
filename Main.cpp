@@ -1,6 +1,7 @@
 #include "lista.h"
 #include "pila.h"
 #include "cola.h"
+#include "arbol_binario.h"
 
 #include <iostream>
 #include <string>
@@ -67,6 +68,8 @@ void manejarMenuPrincipal() {
                 menuPila();
                 break;
             case 4:
+                menuArbolBinario();
+                break;
             case 5:
             case 6:
             case 7:
