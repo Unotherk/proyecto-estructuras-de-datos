@@ -1,6 +1,7 @@
 #include "lista.h"
 #include "pila.h"
 #include "cola.h"
+#include "Arbol_B.h"
 #include "arbol_binario.h"
 
 #include <iostream>
@@ -72,6 +73,8 @@ void manejarMenuPrincipal() {
                 break;
             case 5:
             case 6:
+                menuArbolB();
+                break;
             case 7:
                 cout << "\n\t¡Funcionalidad no implementada!\n"
                      << "Todavia no se ha implementado esta caracteristica\n\n";
