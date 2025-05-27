@@ -333,7 +333,7 @@ void TablaHash::ejecutar() {
                 cout << "Gracias por usar el Sistema   \n";
                 cout << "       de Tabla Hash          \n";
                 cout << "================================\n";
-                return;
+                return;//
             }
             else {
                 cout << "Operacion cancelada. Regresando al menu principal...\n";

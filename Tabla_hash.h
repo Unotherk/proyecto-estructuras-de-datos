@@ -7,7 +7,7 @@
 #include <limits>
 #include <string>
 
-using namespace std;
+using namespace std;//
 
 class TablaHash {
 private:
