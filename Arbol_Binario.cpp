@@ -1,260 +1,296 @@
 #include "Arbol_Binario.h"
 #include <iostream>
 #include <queue>
-#include <limits>
+#include <vector>
+#include <string>
+#include <cstdlib>
+#include <fstream>
 
 using namespace std;
 
-NodoArbolBinario::NodoArbolBinario(int value) : data(value), left(nullptr), right(nullptr) {}
+struct ArbolBinarioInputResult { int valor; bool cancelado; };
+static ArbolBinarioInputResult leerEntrada(const string& mensaje) {
+    string line;
+    while (true) {
+        cout << mensaje;
+        if (!getline(cin, line)) return {0, true};
+        if (line == "C" || line == "c") return {0, true};
+        try {
+            size_t pos;
+            int v = stoi(line, &pos);
+            if (pos == line.size()) return {v, false};
+        } catch (...) {}
+        cout << "Entrada inválida! (número o C)\n";
+    }
+}
+
+NodoArbolBinario::NodoArbolBinario(int value)
+    : data(value), left(nullptr), right(nullptr) {}
 
 ArbolBinario::ArbolBinario() : root(nullptr) {}
 
-void ArbolBinario::insertNode(int value) {
-    NodoArbolBinario* nuevoNodo = new NodoArbolBinario(value);
-
-    if (root == nullptr) {
-        root = nuevoNodo;
-        return;
+ArbolBinario::~ArbolBinario() {
+    if (!root) return;
+    vector<NodoArbolBinario*> stack;
+    stack.push_back(root);
+    while (!stack.empty()) {
+        NodoArbolBinario* n = stack.back();
+        stack.pop_back();
+        if (n->left)  stack.push_back(n->left);
+        if (n->right) stack.push_back(n->right);
+        delete n;
     }
+}
 
+bool ArbolBinario::isEmpty() const {
+    return root == nullptr;
+}
+
+void ArbolBinario::insertNode(int value) {
+    NodoArbolBinario* node = new NodoArbolBinario(value);
+    if (!root) { root = node; return; }
     queue<NodoArbolBinario*> q;
     q.push(root);
-
     while (!q.empty()) {
-        NodoArbolBinario* current = q.front();
-        q.pop();
-
-        if (current->left == nullptr) {
-            current->left = nuevoNodo;
-            return;
-        } else {
-            q.push(current->left);
-        }
-
-        if (current->right == nullptr) {
-            current->right = nuevoNodo;
-            return;
-        } else {
-            q.push(current->right);
-        }
+        NodoArbolBinario* cur = q.front(); q.pop();
+        if (!cur->left) { cur->left = node; return; }
+        q.push(cur->left);
+        if (!cur->right) { cur->right = node; return; }
+        q.push(cur->right);
     }
-}
-
-NodoArbolBinario* ArbolBinario::deleteRecursive(NodoArbolBinario* current, int value) {
-    if (current == nullptr)
-        return nullptr;
-
-    if (current->data == value) {
-        if (current->left == nullptr && current->right == nullptr) {
-            delete current;
-            return nullptr;
-        }
-        if (current->left == nullptr) {
-            NodoArbolBinario* temp = current->right;
-            delete current;
-            return temp;
-        }
-        if (current->right == nullptr) {
-            NodoArbolBinario* temp = current->left;
-            delete current;
-            return temp;
-        }
-
-        NodoArbolBinario* sucesor = findMin(current->right);
-        current->data = sucesor->data;
-        current->right = deleteRecursive(current->right, sucesor->data);
-    } else {
-        current->left = deleteRecursive(current->left, value);
-        current->right = deleteRecursive(current->right, value);
-    }
-    return current;
-}
-
-NodoArbolBinario* ArbolBinario::findMin(NodoArbolBinario* nodo) {
-    while (nodo->left != nullptr) {
-        nodo = nodo->left;
-    }
-    return nodo;
 }
 
 void ArbolBinario::deleteNode(int value) {
-    root = deleteRecursive(root, value);
+    if (isEmpty()) { cout << "El arbol esta vacio\n"; return; }
+    if (root->data == value && !root->left && !root->right) {
+        delete root;
+        root = nullptr;
+        return;
+    }
+    queue<NodoArbolBinario*> q;
+    q.push(root);
+    NodoArbolBinario *target = nullptr, *last = nullptr;
+    vector<NodoArbolBinario*> nodes;
+    while (!q.empty()) {
+        last = q.front(); nodes.push_back(last); q.pop();
+        if (last->data == value) target = last;
+        if (last->left)  q.push(last->left);
+        if (last->right) q.push(last->right);
+    }
+    if (!target) { cout << "Valor no encontrado\n"; return; }
+    target->data = last->data;
+    for (auto n : nodes) {
+        if (n->left == last) {
+            delete last;
+            n->left = nullptr;
+            return;
+        }
+        if (n->right == last) {
+            delete last;
+            n->right = nullptr;
+            return;
+        }
+    }
 }
 
 bool ArbolBinario::search(int value) {
-    return searchRecursive(root, value);
+    if (isEmpty()) { cout << "El arbol esta vacio\n"; return false; }
+    queue<NodoArbolBinario*> q;
+    q.push(root);
+    while (!q.empty()) {
+        NodoArbolBinario* cur = q.front(); q.pop();
+        if (cur->data == value) return true;
+        if (cur->left)  q.push(cur->left);
+        if (cur->right) q.push(cur->right);
+    }
+    return false;
 }
 
-bool ArbolBinario::searchRecursive(NodoArbolBinario* current, int value) {
-    if (current == nullptr)
-        return false;
-
-    if (current->data == value)
-        return true;
-
-    return searchRecursive(current->left, value) || searchRecursive(current->right, value);
+void ArbolBinario::inorderRecursive(NodoArbolBinario* n) {
+    if (!n) return;
+    inorderRecursive(n->left);
+    cout << n->data << " ";
+    inorderRecursive(n->right);
 }
 
 void ArbolBinario::inorder() {
+    if (isEmpty()) { cout << "El arbol esta vacio\n"; return; }
     inorderRecursive(root);
-    cout << endl;
+    cout << "\n";
 }
 
-void ArbolBinario::inorderRecursive(NodoArbolBinario* nodo) {
-    if (nodo != nullptr) {
-        inorderRecursive(nodo->left);
-        cout << nodo->data << " ";
-        inorderRecursive(nodo->right);
-    }
+void ArbolBinario::preorderRecursive(NodoArbolBinario* n) {
+    if (!n) return;
+    cout << n->data << " ";
+    preorderRecursive(n->left);
+    preorderRecursive(n->right);
 }
 
 void ArbolBinario::preorder() {
+    if (isEmpty()) { cout << "El arbol esta vacio\n"; return; }
     preorderRecursive(root);
-    cout << endl;
+    cout << "\n";
 }
 
-void ArbolBinario::preorderRecursive(NodoArbolBinario* nodo) {
-    if (nodo != nullptr) {
-        cout << nodo->data << " ";
-        preorderRecursive(nodo->left);
-        preorderRecursive(nodo->right);
-    }
+void ArbolBinario::postorderRecursive(NodoArbolBinario* n) {
+    if (!n) return;
+    postorderRecursive(n->left);
+    postorderRecursive(n->right);
+    cout << n->data << " ";
 }
 
 void ArbolBinario::postorder() {
+    if (isEmpty()) { cout << "El arbol esta vacio\n"; return; }
     postorderRecursive(root);
-    cout << endl;
-}
-
-void ArbolBinario::postorderRecursive(NodoArbolBinario* nodo) {
-    if (nodo != nullptr) {
-        postorderRecursive(nodo->left);
-        postorderRecursive(nodo->right);
-        cout << nodo->data << " ";
-    }
+    cout << "\n";
 }
 
 void ArbolBinario::levelOrder() {
-    if (root == nullptr) return;
-
+    if (isEmpty()) { cout << "El arbol esta vacio\n"; return; }
     queue<NodoArbolBinario*> q;
     q.push(root);
-
     while (!q.empty()) {
-        NodoArbolBinario* current = q.front();
-        q.pop();
-
-        cout << current->data << " ";
-
-        if (current->left != nullptr) q.push(current->left);
-        if (current->right != nullptr) q.push(current->right);
+        NodoArbolBinario* cur = q.front(); q.pop();
+        cout << cur->data << " ";
+        if (cur->left)  q.push(cur->left);
+        if (cur->right) q.push(cur->right);
     }
-    cout << endl;
+    cout << "\n";
+}
+
+void ArbolBinario::printTreeVisual(NodoArbolBinario* n, int space, int level) {
+    if (!n) return;
+    space += level;
+    printTreeVisual(n->right, space, level);
+    cout << string(space, ' ') << n->data << "\n";
+    printTreeVisual(n->left, space, level);
 }
 
 void ArbolBinario::printTree() {
-    printTreeVisual(root, 0, 5);
+    if (isEmpty()) { cout << "El arbol esta vacio\n"; return; }
+    printTreeVisual(root, 0, 4);
 }
 
-void ArbolBinario::printTreeVisual(NodoArbolBinario* root, int space, int level) {
-    if (root == nullptr) return;
+void ArbolBinario::graphvizRec(NodoArbolBinario* n, ofstream& out) {
+    if (!n) return;
+    auto id = reinterpret_cast<uintptr_t>(n);
+    out << "  \"" << id << "\" [label=\"" << n->data << "\"];\n";
+    if (n->left) {
+        auto lid = reinterpret_cast<uintptr_t>(n->left);
+        out << "  \"" << id << "\" -> \"" << lid << "\";\n";
+        graphvizRec(n->left, out);
+    }
+    if (n->right) {
+        auto rid = reinterpret_cast<uintptr_t>(n->right);
+        out << "  \"" << id << "\" -> \"" << rid << "\";\n";
+        graphvizRec(n->right, out);
+    }
+}
 
-    space += level;
+void ArbolBinario::mostrarGraphviz() {
+    if (isEmpty()) { cout << "El arbol esta vacio\n"; return; }
+    ofstream f("arbol.dot");
+    f << "digraph G {\n";
+    graphvizRec(root, f);
+    f << "}\n";
+    f.close();
+    system("dot -Tpng arbol.dot -o arbol.png");
+    system("start arbol.png");
+}
 
-    printTreeVisual(root->right, space, level);
+void ArbolBinario::cargarDesdeArchivo(const std::string& nombreArchivo) {
+    if (root) {
+        std::vector<NodoArbolBinario*> stk{root};
+        while (!stk.empty()) {
+            auto n = stk.back(); stk.pop_back();
+            if (n->left)  stk.push_back(n->left);
+            if (n->right) stk.push_back(n->right);
+            delete n;
+        }
+        root = nullptr;
+    }
+    std::ifstream archivo(nombreArchivo);
+    if (!archivo.is_open()) return;
+    int valor;
+    std::vector<int> vals;
+    while (archivo >> valor) vals.push_back(valor);
+    archivo.close();
+    for (int v : vals) insertNode(v);
+}
 
-    cout << endl;
-    for (int i = level; i < space; i++)
-        cout << " ";
-    cout << root->data << "\n";
-
-    printTreeVisual(root->left, space, level);
+void ArbolBinario::guardarEnArchivo(const string& nombreArchivo) {
+    ofstream archivo(nombreArchivo);
+    if (!archivo.is_open()) return;
+    if (isEmpty()) return;
+    queue<NodoArbolBinario*> q;
+    q.push(root);
+    while (!q.empty()) {
+        NodoArbolBinario* cur = q.front(); q.pop();
+        archivo << cur->data << "\n";
+        if (cur->left)  q.push(cur->left);
+        if (cur->right) q.push(cur->right);
+    }
+    archivo.close();
 }
 
 void menuArbolBinario() {
     ArbolBinario tree;
-    int opcion, nodoBinario;
-
+    tree.cargarDesdeArchivo("arbol.txt");
+    int opcion;
     do {
         system("cls");
         cout << "MENU ARBOL BINARIO\n"
-             << "1. Insertar nodo al arbol\n"
-             << "2. Eliminar nodo del arbol\n"
-             << "3. Recorrer arbol (in-orden)\n"
-             << "4. Recorrer arbol (pre-orden)\n"
-             << "5. Recorrer arbol (post-orden)\n"
-             << "6. Recorrer arbol (amplitud)\n"
+             << "1. Insertar nodo\n"
+             << "2. Eliminar nodo\n"
+             << "3. Recorrer in-orden\n"
+             << "4. Recorrer pre-orden\n"
+             << "5. Recorrer post-orden\n"
+             << "6. Recorrer amplitud\n"
              << "7. Buscar nodo\n"
-             << "8. Visualizar arbol\n"
+             << "8. Mostrar Graphviz\n"
+             << "9. Volver\n"
              << "Seleccione una opcion: ";
-        cin >> opcion;
-        cin.ignore();
-
+        string op; getline(cin, op);
+        try { opcion = stoi(op); } catch(...) { opcion = -1; }
+        system("cls");
+        ArbolBinarioInputResult res;
         switch (opcion) {
             case 1:
-                cout << "Ingrese el numero para el nodo: ";
-                cin >> nodoBinario;
-                if (cin.fail()) {
-                    cout << "Dato invalido, no es un numero\n";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                } else {
-                    tree.insertNode(nodoBinario);
-                    cout << "Numero valido ingresado: " << nodoBinario << endl;
-                }
-                system("pause");
+                res = leerEntrada("Valor nodo (C cancelar): ");
+                if (!res.cancelado) tree.insertNode(res.valor);
                 break;
             case 2:
-                cout << "Ingrese el nodo que quiere eliminar: ";
-                cin >> nodoBinario;
-                if (cin.fail()) {
-                    cout << "Dato invalido, no es un numero\n";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                } else {
-                    tree.deleteNode(nodoBinario);
-                    cout << "Nodo eliminado exitosamente: " << nodoBinario << endl;
-                }
-                system("pause");
+                res = leerEntrada("Valor a eliminar (C cancelar): ");
+                if (!res.cancelado) tree.deleteNode(res.valor);
                 break;
             case 3:
                 tree.inorder();
-                system("pause");
                 break;
             case 4:
                 tree.preorder();
-                system("pause");
                 break;
             case 5:
                 tree.postorder();
-                system("pause");
                 break;
             case 6:
                 tree.levelOrder();
-                system("pause");
                 break;
             case 7:
-                cout << "Ingrese el nodo que quiere buscar: ";
-                cin >> nodoBinario;
-                if (cin.fail()) {
-                    cout << "Dato invalido, no es un numero\n";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                } else {
-                    if (tree.search(nodoBinario))
-                        cout << "Nodo encontrado: " << nodoBinario << endl;
-                    else
-                        cout << "Nodo no encontrado\n";
+                res = leerEntrada("Valor a buscar (C cancelar): ");
+                if (!res.cancelado) {
+                    bool found = tree.search(res.valor);
+                    cout << (found ? "Encontrado\n" : "No encontrado\n");
                 }
-                system("pause");
                 break;
             case 8:
-                tree.printTree();
-                system("pause");
+                tree.mostrarGraphviz();
                 break;
+            case 9:
+                tree.guardarEnArchivo("arbol.txt");
+                return;
             default:
-                cout << "Opcion no valida!\n";
-                system("pause");
+                cout << "Opcion invalida\n";
         }
+        cout << "\n"; system("pause");
     } while (true);
 }

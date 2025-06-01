@@ -1,30 +1,28 @@
 #ifndef ARBOL_BINARIO_H
 #define ARBOL_BINARIO_H
 
-class NodoArbolBinario {
-public:
+#include <string>
+#include <fstream>
+
+struct NodoArbolBinario {
     int data;
     NodoArbolBinario* left;
     NodoArbolBinario* right;
-
     NodoArbolBinario(int value);
 };
 
 class ArbolBinario {
 private:
     NodoArbolBinario* root;
-
-    NodoArbolBinario* deleteRecursive(NodoArbolBinario* current, int value);
-    NodoArbolBinario* findMin(NodoArbolBinario* nodo);
-    bool searchRecursive(NodoArbolBinario* current, int value);
-    void inorderRecursive(NodoArbolBinario* nodo);
-    void preorderRecursive(NodoArbolBinario* nodo);
-    void postorderRecursive(NodoArbolBinario* nodo);
-    void printTreeVisual(NodoArbolBinario* root, int space, int level);
-
+    void inorderRecursive(NodoArbolBinario* node);
+    void preorderRecursive(NodoArbolBinario* node);
+    void postorderRecursive(NodoArbolBinario* node);
+    void printTreeVisual(NodoArbolBinario* node, int space, int level);
+    void graphvizRec(NodoArbolBinario* node, std::ofstream& out);
 public:
     ArbolBinario();
-
+    ~ArbolBinario();
+    bool isEmpty() const;
     void insertNode(int value);
     void deleteNode(int value);
     bool search(int value);
@@ -33,8 +31,11 @@ public:
     void postorder();
     void levelOrder();
     void printTree();
+    void mostrarGraphviz();
+    void cargarDesdeArchivo(const std::string& nombreArchivo);
+    void guardarEnArchivo(const std::string& nombreArchivo);
 };
 
 void menuArbolBinario();
 
-#endif
+#endif 

@@ -1,15 +1,27 @@
 #ifndef COLA_H
 #define COLA_H
 
+#include <string>
+
+struct ColaInputResult {
+    int valor;
+    bool cancelado;
+};
+
 struct datosCola {
     int dato;
     datosCola* dir_next;
 };
 
-void ingresarDatosCola();
+extern datosCola* first;
+extern datosCola* last;
+
+void ingresarDatosCola(int dato);
 void mostrarDatosCola();
 void eliminarDatosCola();
-void buscarDatosCola();
+void buscarDatosCola(int dato);
+void cargarDesdeArchivoCola(const std::string& nombreArchivo);
+void guardarEnArchivoCola(const std::string& nombreArchivo);
 void menuCola();
 
-#endif
+#endif // COLA_H

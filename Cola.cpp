@@ -1,114 +1,114 @@
+#include "Cola.h"
 #include <iostream>
-#include "cola.h"
+#include <string>
+#include <fstream>
+
 using namespace std;
 
 datosCola* first = nullptr;
-datosCola* last = nullptr;
-datosCola* cola = nullptr;
+datosCola* last  = nullptr;
 
-void ingresarDatosCola() {
-    cola = new datosCola;
-    cout << "Ingrese un dato a la cola: ";
-    cin >> cola->dato;
-    cola->dir_next = nullptr;
-
-    if (last != nullptr) {
-        last->dir_next = cola;
-        last = cola;
-        cout << "Dato ingresado!" << endl;
-    } else {
-        first = last = cola;
-        cout << "Primer dato ingresado!" << endl;
+static ColaInputResult leerEntrada(const string& mensaje) {
+    string line;
+    while (true) {
+        cout << mensaje;
+        getline(cin, line);
+        if (line == "C" || line == "c") return {0, true};
+        try {
+            size_t pos;
+            int v = stoi(line, &pos);
+            if (pos == line.size()) return {v, false};
+        } catch (...) {}
+        cout << "Entrada invalida! (numero o C)\n";
     }
+}
+
+void ingresarDatosCola(int dato) {
+    auto* nodo = new datosCola{dato, nullptr};
+    if (!first) first = last = nodo;
+    else { last->dir_next = nodo; last = nodo; }
 }
 
 void mostrarDatosCola() {
-    if (first == nullptr) {
-        cout << "La cola esta vacia!" << endl;
-        return;
-    }
-
-    datosCola* temp = first;
-    cout << "Los datos de la cola son: " << endl;
-    while (temp != nullptr) {
-        cout << temp->dato << endl;
-        temp = temp->dir_next;
-    }
+    if (!first) { cout << "La cola esta vacia.\n"; return; }
+    cout << "Cola: ";
+    for (auto* cur = first; cur; cur = cur->dir_next)
+        cout << cur->dato << " ";
+    cout << "\n";
 }
 
 void eliminarDatosCola() {
-    if (first != nullptr) {
-        datosCola* temp = first;
-        cout << "Eliminado: " << temp->dato << endl;
-        first = first->dir_next;
-        delete temp;
-
-        if (first == nullptr) {
-            last = nullptr;
-        }
-    } else {
-        cout << "La cola esta vacia!" << endl;
-    }
+    if (!first) { cout << "La cola esta vacia.\n"; return; }
+    auto* temp = first;
+    first = first->dir_next;
+    if (!first) last = nullptr;
+    delete temp;
 }
 
-void buscarDatosCola() {
-    if (first == nullptr) {
-        cout << "La cola esta vacia!" << endl;
-        return;
+void buscarDatosCola(int dato) {
+    if (!first) { cout << "La cola esta vacia.\n"; return; }
+    for (auto* cur = first; cur; cur = cur->dir_next) {
+        if (cur->dato == dato) { cout << "Encontrado.\n"; return; }
     }
+    cout << "No encontrado.\n";
+}
 
-    int buscarDatos;
-    cout << "Ingrese el dato a buscar: ";
-    cin >> buscarDatos;
-
-    datosCola* temp = first;
-    while (temp != nullptr) {
-        if (temp->dato == buscarDatos) {
-            cout << "Dato encontrado! El dato es: " << temp->dato << endl;
-            return;
-        }
-        temp = temp->dir_next;
+void cargarDesdeArchivoCola(const std::string& nombreArchivo) {
+    datosCola* cur = first;
+    while (cur) {
+        datosCola* tmp = cur;
+        cur = cur->dir_next;
+        delete tmp;
     }
+    first = last = nullptr;
+    std::ifstream archivo(nombreArchivo);
+    if (!archivo.is_open()) return;
+    int valor;
+    while (archivo >> valor) ingresarDatosCola(valor);
+    archivo.close();
+}
 
-    cout << "No se encontro el dato!" << endl;
+void guardarEnArchivoCola(const string& nombreArchivo) {
+    ofstream archivo(nombreArchivo);
+    if (!archivo.is_open()) return;
+    for (auto* cur = first; cur; cur = cur->dir_next)
+        archivo << cur->dato << "\n";
 }
 
 void menuCola() {
+    cargarDesdeArchivoCola("cola.txt");
     int opcion;
     do {
         system("cls");
-        cout << "MENU COLA\n"
-             << "1. Ingresar datos a la cola\n"
-             << "2. Mostrar datos de la cola\n"
-             << "3. Eliminar datos de la cola\n"
-             << "4. Buscar datos en la cola\n"
-             << "5. Volver al menu principal\n"
-             << "Seleccione una opcion: ";
-        cin >> opcion;
-        cin.ignore();
-
+        cout << "=== MENU COLA ===\n"
+             << "1. Ingresar dato\n"
+             << "2. Mostrar cola\n"
+             << "3. Eliminar dato\n"
+             << "4. Buscar dato\n"
+             << "5. Volver\n"
+             << "Seleccione: ";
+        string op; getline(cin, op);
+        try { opcion = stoi(op); } catch (...) { opcion = -1; }
+        system("cls");
         switch (opcion) {
-            case 1:
-                ingresarDatosCola();
-                system("pause");
+            case 1: {
+                auto res = leerEntrada("Valor (C cancelar): ");
+                if (!res.cancelado) ingresarDatosCola(res.valor);
                 break;
-            case 2:
-                mostrarDatosCola();
-                system("pause");
+            }
+            case 2: mostrarDatosCola(); break;
+            case 3: eliminarDatosCola(); break;
+            case 4: {
+                auto res = leerEntrada("Valor a buscar (C cancelar): ");
+                if (!res.cancelado) buscarDatosCola(res.valor);
                 break;
-            case 3:
-                eliminarDatosCola();
-                system("pause");
-                break;
-            case 4:
-                buscarDatosCola();
-                system("pause");
-                break;
+            }
             case 5:
+                guardarEnArchivoCola("cola.txt");
                 return;
             default:
-                cout << "Opcion no valida!" << endl;
-                system("pause");
+                cout << "Opción no válida.\n";
         }
+        cout << "\n"; system("pause");
     } while (true);
 }
